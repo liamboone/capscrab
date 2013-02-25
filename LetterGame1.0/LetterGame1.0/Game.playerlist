@@ -1,0 +1,3 @@
+lettergame.g0.RandomPlayer
+lettergame.g4.BoringPlayer
+lettergame.g4.BetterPlayer
