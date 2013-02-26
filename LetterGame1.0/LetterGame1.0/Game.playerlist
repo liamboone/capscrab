@@ -1,3 +1,3 @@
 lettergame.g0.RandomPlayer
-lettergame.g4.BoringPlayer
-lettergame.g4.BetterPlayer
+lettergame.g1.BoringPlayer
+lettergame.g1.BetterPlayer
