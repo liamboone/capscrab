@@ -58,6 +58,8 @@ public class BoringPlayer extends Player {
 			//logger.trace("myID = " + myID + " and I'm adding " + l + " from the secret state");
 			currentLetters.add(l.getCharacter());
 		}
+		
+		logger.trace("size of wordlist:" + wordlist.size());
 	}
 	
 

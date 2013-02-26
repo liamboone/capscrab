@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import lettergame.ui.Letter;
+import lettergame.ui.LetterGameValues;
 import lettergame.ui.Player;
 import lettergame.ui.PlayerBids;
 import lettergame.ui.SecretState;
@@ -12,9 +13,6 @@ import lettergame.ui.Word;
 
 
 /*
- * This player bids randomly within a certain range
- * based on the letter's value.
- * 
  * Keep in mind that the Player superclass has the following fields: 
 	Logger logger
 	ArrayList<Character> currentLetters
@@ -26,15 +24,17 @@ public class BetterPlayer extends Player {
 
 	public final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	
+	public int[] bagOfLetters;
+	
 	public BetterPlayer() {
 		super();
 	}
 	
 	// for generating random numbers
 	private Random random = new Random();
-		
 
-	
+	private int spent;
+		
     /*
      * This is called once at the beginning of a Game.
      * The id is what the game considers to be your unique identifier
@@ -52,7 +52,13 @@ public class BetterPlayer extends Player {
 	 * The current_round indicates the current round number (0-based)
 	 */
 	public void newRound(SecretState secretState, int current_round) {
-
+		spent = 0;
+		bagOfLetters = new int[LETTERS.length()];
+		for( int i = 0; i < LETTERS.length(); i ++ )
+		{
+			bagOfLetters[i] = LetterGameValues.getLetterFrequency( LETTERS.charAt( i ) );
+		}
+		
 		// be sure to reinitialize the list at the start of the round
 		currentLetters = new ArrayList<Character>();
 		
@@ -60,6 +66,7 @@ public class BetterPlayer extends Player {
 		for (Letter l : secretState.getSecretLetters()) {
 			//logger.trace("myID = " + myID + " and I'm adding " + l + " from the secret state");
 			currentLetters.add(l.getCharacter());
+			bagOfLetters[ Integer.valueOf( l.getCharacter() ) - Integer.valueOf( 'A' ) ] --;
 		}
 	}
 	
@@ -79,6 +86,18 @@ public class BetterPlayer extends Player {
 		}
 		return new Word(extras);
 	}
+
+	private boolean isPossible( Word w1, int[] letters )
+	{
+		for( int i = 0; i < 26; i ++ )
+		{
+			if( w1.countKeep[i] > letters[i] )
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 	
 	private boolean canMake( Word w, Word letters, int deadletters )
 	{
@@ -97,16 +116,17 @@ public class BetterPlayer extends Player {
 		return false;
 	}
 
-	private Word bestWord(Word letters){
-		Word bestword = new Word("");
+	private int bestWord( ArrayList<Integer> possible, Word letters, int[] bag ){
+		int bestword = -1;
 
 		// iterate through all Words in the list
 		// and see which ones we can form
 		int currentBest = 0;
 		
-		for (Word w : wordlist) 
+		for( int i : possible ) 
 		{
-			if( w.getLength() <= 7 && canMake( w, letters, 0 ) )
+			Word w = wordlist.get( i );
+			if( canMake( w, letters, 0 ) )
 			{
 				int score = w.getScore();
 				// don't forget the bonus!
@@ -114,29 +134,61 @@ public class BetterPlayer extends Player {
 				if ( score > currentBest ) 
 				{
 					currentBest = score;
-					bestword = w;
+					bestword = i;
 				}
 			}
 		}
 		return bestword; 
 	}
 	
-	public List<Word> possibleWords( Word letters )
+	public ArrayList<Integer> possibleWords( Word letters, int[] bag )
 	{
-		ArrayList<Word> possibilities = new ArrayList<Word>();
-		for( Word w : wordlist )
+		ArrayList<Integer> possibilities = new ArrayList<Integer>();
+		for( int i = 0; i < wordlist.size(); i ++ )
 		{
-			if( w.getLength() <= 7 && canMake( w, letters, 0 ) )
+			Word w = wordlist.get( i );
+			if( w.getLength() <= 7 && isPossible( extraLetters( letters, w ), bag ) )
 			{
-				possibilities.add( w );
+				if( canMake( w, letters, 0 ) )
+				{
+					possibilities.add( i );
+				}
 			}
 		}
 		return possibilities;
 	}
 	
-	public float probablility( Word letters )
+	/*
+	 * Returns the probability of a collection of letters being pulled from the given bag of letters
+	 * bag here is a 26 long array of counts ( to represent multiples of letters easily )
+	 */
+	public float probability( Word letters, int[] bag )
 	{
-		float p = 1.0f;
+		float p = letters.getLength() == 0 ? 1.0f : 0.0f;
+		int offset = Integer.valueOf('A');
+		String s = letters.getWord();
+		
+		float bagSize = 0.0f;
+		
+		for( int i = 0; i < LETTERS.length(); i ++ )
+		{
+			bagSize += bag[i];
+		}
+		
+		if( bagSize < 1.0f ) return 0.0f;
+		
+		for( int i = 0; i < letters.getLength(); i ++ )
+		{
+			
+			int j = Integer.valueOf( s.charAt(i) ) - offset;
+			String n = s.substring(0, i) + s.substring(i+1);
+
+			float p_l = ( bag[j] / bagSize );
+			
+			bag[j]--;
+			p += p_l*probability( new Word( n ), bag );
+			bag[j]++;
+		}
 		
 		return p;
 	}
@@ -154,21 +206,47 @@ public class BetterPlayer extends Player {
 			c[i+1] = currentLetters.get(i);
 		}
 		c[0] = bidLetter.getCharacter();
+		
+		bagOfLetters[ Integer.valueOf( c[0] ) - Integer.valueOf( 'A' ) ] --;
+		
 		String s = new String(c);
 		Word letters = new Word( s );
 		
-		ArrayList<Word> p = (ArrayList<Word>) possibleWords( letters );
+		ArrayList<Integer> possible = possibleWords( letters, bagOfLetters );
 		
-		Word bestword = bestWord( letters );
+		prune( possible, letters, bagOfLetters );
+		
+		logger.trace( "# of possible words: " + possible.size() );
+		
+		float expected = 0.0f;
+		
+		for( int wi : possible )
+		{
+			Word w = wordlist.get( wi );
+			expected += probability( extraLetters( letters, w ), bagOfLetters )*( w.getScore() + ( w.getLength() == 7 ? 50 : 0 ) );
+		}
+		
+		logger.trace( "Expected score:" + expected );
+		
+		int bestwordidx = bestWord( possible, letters, bagOfLetters );
+		Word bestword = bestwordidx >= 0 ? wordlist.get(bestwordidx) : new Word("");
+		
 		int score = ( bestword.getScore() + ( bestword.getLength() == 7 ? 50 : 0 ) );
 		Word extras = extraLetters( letters, bestword );
 		
-		logger.trace( "Best possible word so far: " + bestword.getWord( ) + " for " + score + " with " + extras.getWord() + " of " + p.size() );
+		logger.trace( "\n\nBest possible word so far: " + bestword.getWord( ) + " for " + score + 
+				"\nI need " + ( extras.getLength() == 0 ? "nothing" : extras.getWord() ) + " and my chances are: " + 100 * probability( extras, bagOfLetters ) + "%\n" );
 		
+		spent += bidLetter.getValue();
 		return bidLetter.getValue();
 	}
 
-	
+
+	private void prune(ArrayList<Integer> possible, Word letters, int[] bag) {
+		// TODO prune out words that are useless
+	}
+
+
 	/*
 	 * This method is called after a bid. It indicates whether or not the player
 	 * won the bid and what letter was being bid on, and also includes all the
