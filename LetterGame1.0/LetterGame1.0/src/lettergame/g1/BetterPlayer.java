@@ -64,6 +64,8 @@ public class BetterPlayer extends Player {
 					.charAt(i));
 		}
 
+		logger.trace(probability(new Word("POTATO"), bagOfLetters ));
+		
 		// be sure to reinitialize the list at the start of the round
 		currentLetters = new ArrayList<Character>();
 
@@ -181,7 +183,7 @@ public class BetterPlayer extends Player {
 	 * multiples of letters easily )
 	 */
 	public float probability(Word letters, int[] bag) {
-		float p = letters.getLength() == 0 ? 1.0f : 0.0f;
+		float p = 1.0f;
 		int offset = Integer.valueOf('A');
 		String s = letters.getWord();
 
@@ -191,9 +193,26 @@ public class BetterPlayer extends Player {
 			bagSize += bag[i];
 		}
 
+		for( int i = 0; i < LETTERS.length(); i++ )
+		{
+			if( letters.countKeep[i] > bag[i] ) return 0.0f;
+			int f = LetterGameValues.getLetterFrequency((char) ('A'+i));
+			for( int j = 0; j < letters.countKeep[i]; j++ )
+			{
+				p *= f;
+				f--;
+			}
+		}
+		
 		if (bagSize < 1.0f)
-			return p;
-
+			return 0.0f;
+		
+		int nCk = 1;
+		int k = letters.getLength();
+		for( int i = 0; i < k; i++ )
+			nCk *= (bagSize-i) / (i+1);
+		
+/*
 		for (int i = 0; i < letters.getLength(); i++) {
 
 			int j = Integer.valueOf(s.charAt(i)) - offset;
@@ -205,8 +224,8 @@ public class BetterPlayer extends Player {
 			p += p_l * probability(new Word(n), bag);
 			bag[j]++;
 		}
-
-		return p;
+*/
+		return p/(float)(nCk);
 	}
 
 	/*
@@ -260,7 +279,7 @@ public class BetterPlayer extends Player {
 
 		ifWonExpected = expected;
 		
-		if( expected > lastExpected ) currentBid += Math.min(5, Math.ceil( expected-lastExpected ));
+		if( expected > lastExpected ) currentBid = (int)Math.max(1, bidLetter.getValue()-2+Math.min(5, Math.ceil( expected-lastExpected )));
 		if( expected < lastExpected ) currentBid = 0; //+= Math.max(0, 3-Math.ceil( lastExpected-expected ));
 		
 		
@@ -284,6 +303,7 @@ public class BetterPlayer extends Player {
 	private ArrayList<Integer> prune(ArrayList<Integer> possible, Word letters, int[] bag, int score) {
 		// TODO prune out words that are useless
 		
+		// Tracks the potential word indices, and the indicies of the words to remove
 		ArrayList<Integer> currWords = new ArrayList<Integer>();
 		HashSet<Integer> toRemove = new HashSet<Integer>();
 		
@@ -302,6 +322,7 @@ public class BetterPlayer extends Player {
 			{
 				toRemove.add(i);
 			}
+			
 		}
 		
 		for( int i : currWords ){
