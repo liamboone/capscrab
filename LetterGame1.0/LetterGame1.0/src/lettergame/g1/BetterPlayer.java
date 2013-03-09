@@ -237,6 +237,9 @@ public class BetterPlayer extends Player {
 	 */
 	public int getBid(Letter bidLetter, ArrayList<PlayerBids> playerBidList,
 			ArrayList<String> playerList, SecretState secretState) {
+		
+		
+		
 		char c[] = new char[currentLetters.size() + 1];
 		for (int i = 0; i < currentLetters.size(); i++) {
 			c[i + 1] = currentLetters.get(i);
