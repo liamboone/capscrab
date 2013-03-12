@@ -1,9 +1,12 @@
 package lettergame.g1;
 
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Random;
 
+import lettergame.ui.CSVReader;
 import lettergame.ui.Letter;
+import lettergame.ui.LetterGame;
 import lettergame.ui.Player;
 import lettergame.ui.PlayerBids;
 import lettergame.ui.SecretState;
@@ -31,6 +34,7 @@ public class SimplePlayer extends Player {
 	private Random random = new Random();
 		
 
+	private ArrayList<Integer>[][] bidstrategy;
 	
     /*
      * This is called once at the beginning of a Game.
@@ -40,6 +44,41 @@ public class SimplePlayer extends Player {
      */
 	public void newGame(int id, int number_of_rounds, int number_of_players) {
 		myID = id;
+		bidstrategy = new ArrayList[7][26];
+		for( int i = 0; i < 7; i ++ )
+		{
+			for( int j = 0; j < 26; j++ )
+			{
+				bidstrategy[i][j] = new ArrayList<Integer>();
+			}
+		}
+		try
+		{
+            CSVReader csvreader = new CSVReader(new FileReader("strategy.txt"), ';');
+            String[] nextLine;
+            int hand = 0;
+            while((nextLine = csvreader.readNext()) != null)
+            {
+            	if (nextLine.length > 1)  
+            	{
+            		for( int i = 0; i < 26; i ++ )
+            		{
+            			String[] bids = nextLine[i].split(",");
+            			for( String bid : bids )
+            			{
+            				bidstrategy[hand][i].add( Integer.valueOf( bid ) );
+            			}
+            		}
+           		}
+            	hand++;
+            }
+
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            logger.error("\n Could not load strategy!");
+        }
 	}
 
 
@@ -70,9 +109,8 @@ public class SimplePlayer extends Player {
 	 */
 	public int getBid(Letter bidLetter, ArrayList<PlayerBids> playerBidList, ArrayList<String> playerList, SecretState secretState) {
 		
-		if( bidLetter.getCharacter() == 'Q' ) return 0;
-		if( currentLetters.size() < 3 ) return bidLetter.getValue();
-		return 0;
+		int bid = random.nextInt(bidstrategy[currentLetters.size()][bidLetter.getCharacter()-'A'].size());
+		return bidstrategy[currentLetters.size()][bidLetter.getCharacter()-'A'].get(bid);
 	}
 
 	
