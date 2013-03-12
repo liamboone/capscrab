@@ -34,7 +34,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class GameEngine extends javax.swing.JFrame {
 	
-	private static final String VERSION = "1.0";
+	private static final String VERSION = "1.1";
 
     public static IOController iocontroller;
     public static GameConfig gameconfig;

@@ -34,13 +34,10 @@ public abstract class Player {
 	protected int myID;
 	
 	// the list of all the words in the dictionary
-	protected static ArrayList<Word> wordlist = new ArrayList<Word>(267000);
+	protected final static ArrayList<Word> wordlist = new ArrayList<Word>(267000);
 	
-	private static boolean didreadthelist = false;
-	
-	protected Player() {
-    	if ( didreadthelist ) return;
-    	didreadthelist = true;
+	static {
+    	//if (null != dictionary) return;
         try{
             CSVReader csvreader = new CSVReader(new FileReader(LetterGame.DICTIONARY_FILE));
             String[] nextLine;

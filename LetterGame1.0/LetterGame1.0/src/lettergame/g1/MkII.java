@@ -20,13 +20,13 @@ import lettergame.ui.Word;
  ArrayList<Word> wordlist
  */
 
-public class BetterPlayer extends Player {
+public class MkII extends Player {
 
 	public final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 	public int[] bagOfLetters;
 
-	public BetterPlayer() {
+	public MkII() {
 		super();
 	}
 
@@ -179,17 +179,15 @@ public class BetterPlayer extends Player {
 
 	/*
 	 * Returns the probability of a collection of letters being pulled from the
-	 * given bag of letters bag here is a 26 long array of counts ( to represent
+	 * given bag of letters. bag here is a 26 long array of counts ( to represent
 	 * multiples of letters easily )
 	 */
 	public float probability(Word letters, int[] bag) {
 		float p = 1.0f;
-		int offset = Integer.valueOf('A');
-		String s = letters.getWord();
-
 		float bagSize = 0.0f;
 
-		for (int i = 0; i < LETTERS.length(); i++) {
+		for (int i = 0; i < LETTERS.length(); i++) 
+		{
 			bagSize += bag[i];
 		}
 
@@ -210,21 +208,10 @@ public class BetterPlayer extends Player {
 		int nCk = 1;
 		int k = letters.getLength();
 		for( int i = 0; i < k; i++ )
+		{
 			nCk *= (bagSize-i) / (i+1);
-		
-/*
-		for (int i = 0; i < letters.getLength(); i++) {
-
-			int j = Integer.valueOf(s.charAt(i)) - offset;
-			String n = s.substring(0, i) + s.substring(i + 1);
-
-			float p_l = (bag[j] / bagSize);
-
-			bag[j]--;
-			p += p_l * probability(new Word(n), bag);
-			bag[j]++;
 		}
-*/
+
 		return p/(float)(nCk);
 	}
 
@@ -238,7 +225,8 @@ public class BetterPlayer extends Player {
 	public int getBid(Letter bidLetter, ArrayList<PlayerBids> playerBidList,
 			ArrayList<String> playerList, SecretState secretState) {
 		
-		
+		if( bidLetter.getCharacter() == 'Q' ) return 0;
+		if( currentLetters.size() < 3 ) return bidLetter.getValue();
 		
 		char c[] = new char[currentLetters.size() + 1];
 		for (int i = 0; i < currentLetters.size(); i++) {
@@ -255,8 +243,7 @@ public class BetterPlayer extends Player {
 
 		ArrayList<Integer> possible = possibleWords(letters, bagOfLetters);
 		int prevwordidx = bestCurrentWord(possible, prev, bagOfLetters);
-		Word bestprev = prevwordidx >= 0 ? wordlist.get(prevwordidx)
-				: new Word("");
+		Word bestprev = prevwordidx >= 0 ? wordlist.get(prevwordidx) : new Word("");
 		
 		logger.trace("# of possible words: " + possible.size());
 		
@@ -304,28 +291,61 @@ public class BetterPlayer extends Player {
 	}
 
 	private ArrayList<Integer> prune(ArrayList<Integer> possible, Word letters, int[] bag, int score) {
-		// TODO prune out words that are useless
-		
 		// Tracks the potential word indices, and the indicies of the words to remove
 		ArrayList<Integer> currWords = new ArrayList<Integer>();
 		HashSet<Integer> toRemove = new HashSet<Integer>();
+		float percent = 0;
 		
-		for( int i : possible ){
-			
+		
+		for( int i = 0; i < possible.size(); i++ )
+		{
+			Word w1 = wordlist.get(possible.get(i));
+			Word hand1 = extraLetters( letters, w1 );
+			int score1 = w1.getScore() + ( w1.getLength() == 7 ? 50 : 0 );
+			for( int j : possible )
+			{
+				if( !toRemove.contains( j ) )
+				{
+					Word w2 = wordlist.get(j);
+					Word hand2 = extraLetters( letters, w2 );
+					int score2 = w2.getScore() + ( w2.getLength() == 7 ? 50 : 0 );
+					if( hand2.contains(hand1) )
+					{
+						if( score1 > score2 )
+						{
+							toRemove.add( j );
+						}
+					}
+					if( hand1.contains(hand2) )
+					{
+						if( score1 > score2 )
+						{
+							toRemove.add( j );
+						}
+					}
+				}
+			}
+			if( i / ((float) possible.size()) > percent )
+			{
+				logger.trace( i + " of " + possible.size() + ": " + toRemove.size() );
+				percent += 0.01;
+			}
+		}
+		
+		/*
+		for( int i : possible )
+		{
 			Word w = wordlist.get(i);
 			int wscore = (w.getScore() + (w.getLength() == 7 ? 50 : 0));
 			
 			if(letters.contains(w)){
-				
 				currWords.add(i);
-				
 			}
 			
 			if( wscore < score )
 			{
 				toRemove.add(i);
 			}
-			
 		}
 		
 		for( int i : currWords ){
@@ -349,7 +369,7 @@ public class BetterPlayer extends Player {
 			}
 			
 		}// end outer loop
-		
+		*/
 		// removes all redundancies
 		possible.removeAll(toRemove);
 		

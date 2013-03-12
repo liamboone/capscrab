@@ -21,9 +21,9 @@ import lettergame.ui.Word;
 	ArrayList<Word> wordlist
  */
 
-public class BoringPlayer extends Player {
+public class SimplePlayer extends Player {
 
-	public BoringPlayer() {
+	public SimplePlayer() {
 		super();
 	}
 	
@@ -58,8 +58,6 @@ public class BoringPlayer extends Player {
 			//logger.trace("myID = " + myID + " and I'm adding " + l + " from the secret state");
 			currentLetters.add(l.getCharacter());
 		}
-		
-		logger.trace("size of wordlist:" + wordlist.size());
 	}
 	
 
@@ -71,7 +69,10 @@ public class BoringPlayer extends Player {
 	 * secretState = your secret state (which includes the score)
 	 */
 	public int getBid(Letter bidLetter, ArrayList<PlayerBids> playerBidList, ArrayList<String> playerList, SecretState secretState) {
-		return bidLetter.getValue();
+		
+		if( bidLetter.getCharacter() == 'Q' ) return 0;
+		if( currentLetters.size() < 3 ) return bidLetter.getValue();
+		return 0;
 	}
 
 	

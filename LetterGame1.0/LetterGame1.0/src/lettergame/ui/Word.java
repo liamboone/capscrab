@@ -56,5 +56,18 @@ public class Word {
 
 	}
 
-
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (o instanceof Word) {
+			Word other = (Word)o;
+			return word.equals(other.word);
+		}
+		else return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return word.hashCode();
+	}
 }

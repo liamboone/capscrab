@@ -103,7 +103,7 @@ public class GameController {
                 conductAuction(gc_local,bidLetter);
             }
 
-            log.trace("The letter " + thisBid.TargetLetter + " was won by player #" + thisBid.winnerID + " and the amount paid was " + thisBid.winAmount);
+            log.error("The letter " + thisBid.TargetLetter + " was won by player #" + thisBid.winnerID + " and the amount paid was " + thisBid.winAmount + " with a bid of " + thisBid.getBidvalues().get(thisBid.winnerID));
             for(int i=0;i<gc_local.PObjectList.size();i++)
             {
                 Player currPlayer = gc_local.PObjectList.get(i);
@@ -124,7 +124,9 @@ public class GameController {
                 Player currP = gc_local.PObjectList.get(loop);
             	long start = System.currentTimeMillis();
                 String word = currP.getWord();
-                log.error("Player #" + loop + " wants to make the word " + word);
+                Word pwrd = new Word( currP.getWord() );
+                int pscore = (pwrd.getLength() == 7 ? 50 : 0) + pwrd.getScore();
+                log.error("Player #" + loop + " wants to make the word " + word + " for " + pscore);
                 long end = System.currentTimeMillis();
                 if (end - start > TIME_LIMIT) 
                 	log.error("Player #" + loop + " took too long to return a word!");
@@ -357,7 +359,16 @@ public class GameController {
         lastBid.winAmount = lastBid.bidvalues.get(winnerIndex);
         lastBid.wonBy = gc_local.PlayerList.get(winnerIndex);
         lastBid.winnerID = winnerIndex;
-        lastBid.winAmount = lastBid.bidvalues.get(runnerUpIndex);
+        int emptyBids = 0;
+        for(int loop=0;loop<lastBid.bidvalues.size();loop++)
+        {
+            if(lastBid.bidvalues.get(loop) == -1)
+            {
+                emptyBids++;
+            }
+        }
+        if (emptyBids == lastBid.bidvalues.size()-1) lastBid.winAmount = 0;
+        else lastBid.winAmount = lastBid.bidvalues.get(runnerUpIndex);
 
         pointsSpent.set(winnerIndex, pointsSpent.get(winnerIndex) + lastBid.winAmount);
         
@@ -370,7 +381,7 @@ public class GameController {
         winnerOS.openLetters.add(bidletter);
         lastBid.TargetLetter = bidletter;
         // Also reduce his score/money
-        winnerSS.score -= lastBid.bidvalues.get(runnerUpIndex);
+        winnerSS.score -= lastBid.winAmount; //lastBid.bidvalues.get(runnerUpIndex);
         gc_local.num_leters_done++;
     }
 

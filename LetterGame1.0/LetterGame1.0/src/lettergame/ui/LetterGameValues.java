@@ -38,7 +38,6 @@ public final class LetterGameValues {
             case 'L': score = 1;break;
             case 'S': score = 1;break;
             case 'U': score = 1;break;
-            
             case 'D': score = 2;break;
             case 'G': score = 2;break;
 
@@ -54,13 +53,10 @@ public final class LetterGameValues {
             case 'Y': score = 4;break;
 
             case 'K': score = 5;break;
-            
             case 'J': score = 8;break;
             case 'X': score = 8;break;
-            
             case 'Q': score = 10;break;
             case 'Z': score = 10;break;
-            
             case '*': score = 0;break;
 
             default:
@@ -77,27 +73,23 @@ public final class LetterGameValues {
         switch(letter)
         {
             case 'E': freq = 12;break;
-            
             case 'A': freq = 9;break;
             case 'I': freq = 9;break;
-            
             case 'O': freq = 8;break;
-            
             case 'N': freq = 6;break;
             case 'R': freq = 6;break;
             case 'T': freq = 6;break;
-            
             case 'L': freq = 4;break;
             case 'S': freq = 4;break;
             case 'U': freq = 4;break;
             case 'D': freq = 4;break;
-            
             case 'G': freq = 3;break;
 
             case 'B': freq = 2;break;
             case 'C': freq = 2;break;
             case 'M': freq = 2;break;
             case 'P': freq = 2;break;
+
             case 'F': freq = 2;break;
             case 'H': freq = 2;break;
             case 'V': freq = 2;break;
@@ -109,7 +101,6 @@ public final class LetterGameValues {
             case 'X': freq = 1;break;
             case 'Q': freq = 1;break;
             case 'Z': freq = 1;break;
-            
             case '*': freq = 0;break;
             
             default:
