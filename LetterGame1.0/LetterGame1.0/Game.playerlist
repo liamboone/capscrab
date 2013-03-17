@@ -1,7 +1,7 @@
 lettergame.g0.RandomPlayer
 lettergame.g0.ZeroBidPlayer
 lettergame.g1.BetterPlayer
-lettergame.g1.SimplePlayer
+lettergame.g1.Potato
 lettergame.g1.MkII
 lettergame.g2.MaxPlayer
 lettergame.g3.G3DefensivePlayer
