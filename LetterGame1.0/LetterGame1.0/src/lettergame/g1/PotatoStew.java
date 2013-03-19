@@ -153,6 +153,11 @@ public class PotatoStew extends Player {
 	 */
 	public int getBid(Letter bidLetter, ArrayList<PlayerBids> playerBidList, ArrayList<String> playerList, SecretState secretState) {
 		
+		// bids 3 if we have 7 or more letters
+		if(currentLetters.size() > 7){
+			return 3;
+		}// end default scraping
+		
 		// checks to see which strategy to use for bidding.
 		if(learnedStrat){
 			char c[] = new char[currentLetters.size() + 1];
